@@ -1,4 +1,4 @@
-{% macro is_csv(file_format) %}
+{% macro is_csv(source_node) %}
 
 {# From https://docs.snowflake.net/manuals/sql-reference/sql/create-external-table.html:
 
@@ -10,12 +10,12 @@ Note: FORMAT_NAME and TYPE are mutually exclusive; to avoid unintended behavior,
 you should only specify one or the other when creating an external table.
 
 #}
-
-    {% set ff_ltrimmed = file_format|lower|replace(' ','') %}
+    {% set file_format = source_node.external.file_format %}
+    {% set ff_ltrimmed = file_format|lower|replace(' ','')|replace("'","") %}
 
     {% if 'type=' in ff_ltrimmed %}
     
-        {% if 'type=csv' in ff_ltrimmed %}
+        {% if "type=csv" in ff_ltrimmed %}
 
             {{return(true)}}
 
@@ -35,9 +35,9 @@ you should only specify one or the other when creating an external table.
         {% if fqn | length == 3 %}
             {% set ff_database, ff_schema, ff_identifier = fqn[0], fqn[1], fqn[2] %}
         {% elif fqn | length == 2 %}
-            {% set ff_database, ff_schema, ff_identifier = target.database, fqn[0], fqn[1] %}
+            {% set ff_database, ff_schema, ff_identifier = source_node.database, fqn[0], fqn[1] %}
         {% else %}
-            {% set ff_database, ff_schema, ff_identifier = target.database, target.schema, fqn[0] %}
+            {% set ff_database, ff_schema, ff_identifier = source_node.database, source_node.schema, fqn[0] %}
         {% endif %}
     
         {% call statement('get_file_format', fetch_result = True) %}
